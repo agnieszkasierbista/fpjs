@@ -32,3 +32,13 @@ view
       mealRow
         cell
       totalRow 
+
+## Update Functions
+
+click add meal
+meal input
+calories input
+click save (add/update)
+click edit
+click delete
+
