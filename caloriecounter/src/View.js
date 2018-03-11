@@ -1,13 +1,16 @@
 import hh from 'hyperscript-helpers';
 import { h } from 'virtual-dom';
+import * as R from 'ramda';
 import {
   showFormMsg,
   mealInputMsg,
   caloriesInputMsg,
   saveMealMsg,
+  deleteMealMsg,
+  editMealMsg,
 } from './Update';
 
-const { pre, div, h1, button, form, label, input } = hh(h);
+const { pre, div, h1, button, form, label, input, td, th, tr, tbody, thead, table, i } = hh(h);
 
 function fieldSet(labelText, inputValue, oninput) {
   return div([
@@ -72,11 +75,145 @@ function formView(dispatch, model) {
   );
 }
 
+//Here goes solution from the course
+
+function cell(tag, className, value) {
+  return tag({ className }, value);
+}
+
+const tableHeader = thead([
+  tr([
+    cell(th, 'pa2 tl', 'Meal'),
+    cell(th, 'pa2 tr', 'Calories'),
+    cell(th, '', ''),
+  ]),
+]);
+
+function mealRow(dispatch, className, meal) {
+  return tr({ className }, [
+    cell(td, 'pa2', meal.description),
+    cell(td, 'pa2 tr', meal.calories),
+    //here I add cell with edit/delete buttons
+    cell(td, 'pa2 tr', [
+      i({
+        className: 'ph1 fa fa-trash-o pointer',
+        onclick: () => dispatch(deleteMealMsg(meal.id)),
+      }),
+      i({
+        className: 'ph1 fa fa-pencil-square-o pointer',
+        onclick: () => dispatch(editMealMsg(meal.id)),
+      }),
+    ]),
+  ]);
+}
+
+function totalRow(meals) {
+  const total = R.pipe(
+    R.map(meal => meal.calories),
+    R.sum,
+  )(meals);
+  return tr({ className: 'bt b' }, [
+    cell(td, 'pa2 tl', 'Total:'),
+    cell(td, 'pa2 tr', total),
+    cell(td, '', ''),
+  ]);
+};
+
+function mealsBody(dispatch, className, meals) {
+  const rows = R.map(
+    R.partial(mealRow, [dispatch, 'stripe-dark']), meals);
+  const rowsWithTotal = [...rows, totalRow(meals)];
+  return tbody({ className }, rowsWithTotal);
+}
+
+function tableView(dispatch, meals) {
+  if (meals.length === 0) {
+    return div({ className: 'mv2 i black-50' }, 'No meals to display...');
+  }
+  return table({ className: 'mv2 w-100 collapse' }, [
+    tableHeader,
+    mealsBody(dispatch, '', meals),
+  ]);
+}
+
+// // Tu wklejone
+
+// function cell(tag, className, value) {
+//   return tag({ className }, value);
+// }
+
+// function mealRow(className, meal) {
+//   return tr({ className }, [
+//     cell(td, 'pa2', meal.description),
+//     cell(td, 'pa2 tr', meal.calories),
+//     //here I add cell with edit/delete buttons
+//     cell(td, 'pa2', operationButtons),
+//   ]);
+// }
+
+// //Here I add operations buttons
+// const operationButtons = div([
+//   button(
+//     {
+//       className: 'f3 pv2 ph3 bn bg-light-gray dim',
+//       type: 'button',
+//       onclick: () => dispatch(showFormMsg(true)),
+//     },
+//     'Edit',
+//   ),
+//   button(
+//     {
+//       className: 'f3 pv2 ph3 bn bg-light-gray dim',
+//       type: 'button',
+//       onclick: () => dispatch(deleteMealg(true)),
+//     },
+//     'Delete',
+//   ),
+// ]);
+
+// //
+
+// function mealsBody(className, meals) {
+//   const rows = R.map(R.partial(mealRow, ['stripe-dark']), meals);
+//   const rowsWithTotal = R.append(totalRow(meals), rows)
+//   return tbody({ className }, rowsWithTotal);
+// }
+
+// const headerRow = tr([
+//   cell(th, 'pa2 tl', 'Meal'),
+//   cell(th, 'pa2 tr', 'Calories'),
+// ]);
+
+// const mealHeader = thead(headerRow);
+
+// function totalRow(meals) {
+//   const total = R.pipe(
+//     R.map(meal => meal.calories),
+//     R.reduce((acc, calories) => acc + calories, 0),
+//   )(meals);
+//   return tr({ className: 'bt b' }, [
+//     cell(td, 'pa2 tl', 'Total:'),
+//     cell(td, 'pa2 tr', total),
+//   ]);
+// };
+
+// function mealsTable(meals) {
+//   return table({ className: 'mw5 center w-100' }, [
+//     mealHeader,
+//     mealsBody('', meals),
+//   ]);
+// };
+
+
+// // Tam wklejone - koniec
+
 function view(dispatch, model) {
   return div({ className: 'mw6 center' }, [
     h1({ className: 'f2 pv2 bb' }, 'Calorie Counter'),
     formView(dispatch, model),
-    pre(JSON.stringify(model, null, 2)),
+    // mealsTable(model.meals),
+    tableView(dispatch, model.meals),
+    // pre(JSON.stringify(model, null, 2)),
   ]);
 }
 
